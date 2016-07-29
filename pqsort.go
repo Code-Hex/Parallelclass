@@ -3,28 +3,26 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	_ "net/http/pprof"
+	"sync"
 )
 
 func main() {
-
 	max := 10000000
 	a := createAry(max)
 	fmt.Println(a)
 
-	ch := make(chan []int)
-	pqsort(a, ch)
+	var wg sync.WaitGroup
+	pqsort(a, &wg)
+	wg.Wait()
 
-	fmt.Println(<-ch)
+	fmt.Println(a)
 }
 
-func pqsort(ary []int, ch chan []int) {
+func pqsort(ary []int, wg *sync.WaitGroup) {
 	if len(ary) < 2 {
-		ch <- ary
 		return
 	}
-
-	ch1 := make(chan []int)
-	ch2 := make(chan []int)
 
 	left, right := 0, len(ary)-1
 
@@ -46,13 +44,14 @@ func pqsort(ary []int, ch chan []int) {
 	ary[left], ary[right] = ary[right], ary[left]
 
 	// Go down the rabbit hole
-	go pqsort(ary[:left], ch1)
-	go pqsort(ary[left+1:], ch2)
-
+	wg.Add(2)
 	go func() {
-		<-ch1
-		<-ch2
-		ch <- ary
+		pqsort(ary[:left], wg)
+		wg.Done()
+	}()
+	go func() {
+		pqsort(ary[left+1:], wg)
+		wg.Done()
 	}()
 }
 
