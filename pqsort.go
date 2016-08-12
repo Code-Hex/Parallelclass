@@ -1,17 +1,22 @@
 package main
 
 import (
-	"fmt"
 	"math/rand"
 	"runtime"
 	"sync"
+	"testing"
 )
 
-func main() {
-	max := 10000000
+func BenchmarkDispersion(b *testing.B) {
+	max := 30000000
 	a := createAry(max)
-	fmt.Println(a)
 	Dispersion(a)
+}
+
+func BenchmarkParallel(b *testing.B) {
+	max := 30000000
+	a := createAry(max)
+	Parallel(a)
 }
 
 func Dispersion(a []int) {
@@ -28,8 +33,6 @@ func Dispersion(a []int) {
 			wg.Done()
 		}(i)
 	}
-
-	fmt.Println(a)
 }
 
 func qsort(ary []int) {
@@ -65,7 +68,7 @@ func Parallel(a []int) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ch := make(chan []int)
 	go pqsort(a, ch)
-	fmt.Println(<-ch)
+	<-ch
 }
 
 func pqsort(ary []int, ch chan []int) {
